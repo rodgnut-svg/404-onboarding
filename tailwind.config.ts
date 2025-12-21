@@ -35,8 +35,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ['"Instrument Serif"', '"DM Serif Display"', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui"],
+        serif: ["var(--font-serif)", "ui-serif", "Georgia"],
       },
       boxShadow: {
         subtle: "0 1px 3px 0 rgba(0, 0, 0, 0.08)",
