@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createClientSupabase } from "@/lib/supabase/server";
+import { JoinProjectForm } from "@/components/onboarding/join-project-form";
 
 export default async function PortalPage() {
   const { user, supabase } = await requireUser();
@@ -14,12 +15,14 @@ export default async function PortalPage() {
   if (!members || members.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-6 py-24 max-w-2xl">
-          <h1 className="text-5xl font-serif font-semibold mb-4">No Projects</h1>
-          <p className="text-lg text-muted">
-            You don't have access to any projects yet. Please contact your agency
-            or enter a client code to get started.
+        <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-24">
+          <div className="max-w-2xl">
+          <h1 className="font-sans font-semibold mb-4" style={{ fontSize: "2.5rem" }}>No Projects</h1>
+          <p className="text-base text-muted mb-8" style={{ fontSize: "1rem" }}>
+            You don't have access to any projects yet. Enter a client code to join a project.
           </p>
+          <JoinProjectForm />
+          </div>
         </div>
       </div>
     );
@@ -32,28 +35,28 @@ export default async function PortalPage() {
 
   // Show project selection
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-24 max-w-4xl">
-        <h1 className="text-5xl font-serif font-semibold mb-12">Select a Project</h1>
-        <div className="grid gap-4 md:grid-cols-2">
-          {members.map((member: any) => {
-            const project = member.projects;
-            return (
-              <a
-                key={member.project_id}
-                href={`/portal/${member.project_id}`}
-                className="block p-6 border border-border rounded-lg bg-card hover:shadow-subtle transition-shadow"
-              >
-                <h2 className="text-2xl font-serif font-semibold mb-2">
-                  {project?.name || "Unnamed Project"}
-                </h2>
-                <p className="text-muted">Status: {project?.status}</p>
-              </a>
-            );
-          })}
+      <div className="min-h-screen bg-background">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-24">
+          <h1 className="font-sans font-semibold mb-12" style={{ fontSize: "2.5rem" }}>Select a Project</h1>
+          <div className="grid gap-4 md:grid-cols-2">
+            {members.map((member: any) => {
+              const project = member.projects;
+              return (
+                <a
+                  key={member.project_id}
+                  href={`/portal/${member.project_id}`}
+                  className="block p-6 border border-border rounded-[12px] bg-card hover:shadow-subtle transition-shadow"
+                >
+                  <h2 className="font-sans font-semibold mb-2" style={{ fontSize: "1.5rem" }}>
+                    {project?.name || "Unnamed Project"}
+                  </h2>
+                  <p className="text-base text-muted">Status: {project?.status}</p>
+                </a>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
   );
 }
 

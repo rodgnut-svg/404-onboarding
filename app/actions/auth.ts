@@ -100,3 +100,30 @@ export async function attachMemberAfterAuth(userId: string) {
   cookieStore.delete("pending_project");
 }
 
+/**
+ * Debug server action to verify auth.uid() is present in server actions.
+ * Returns the current user's ID and email from the server's perspective.
+ */
+export async function debugWhoAmI() {
+  const supabase = await createClientSupabase();
+  
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      userId: null,
+      email: null,
+      error: authError?.message || "No user found",
+    };
+  }
+
+  return {
+    userId: user.id,
+    email: user.email || null,
+    error: null,
+  };
+}
+

@@ -1,23 +1,81 @@
-import { redirect } from "next/navigation";
-import { createClientSupabase } from "@/lib/supabase/server";
-import { sendMagicLink } from "@/app/actions/auth";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
 
-async function checkAuth() {
-  const supabase = await createClientSupabase();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
+export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-export default async function LoginPage() {
-  const user = await checkAuth();
-  if (user) {
-    redirect("/portal");
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createBrowserSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      
+      if (user) {
+        router.push("/portal");
+      } else {
+        setCheckingAuth(false);
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
+
+  const errorParam = searchParams.get("error");
+  const sentParam = searchParams.get("sent");
+
+  // Show error from URL params
+  const displayError = error || errorParam;
+  const displaySent = sent || sentParam === "true";
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const supabase = createBrowserSupabaseClient();
+      const { error: signInError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (signInError) {
+        setError(signInError.message);
+        setLoading(false);
+        return;
+      }
+
+      setSent(true);
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send magic link");
+      setLoading(false);
+    }
+  };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
   }
 
   return (
@@ -35,26 +93,35 @@ export default async function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={async (formData: FormData) => {
-              "use server";
-              const result = await sendMagicLink(formData);
-              if (result.success) {
-                redirect("/login?sent=true");
-              }
-            }}>
+            {displayError && (
+              <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
+                {displayError === "auth_failed" && "Authentication failed. Please try again."}
+                {displayError === "no_code" && "No authentication code received. Please request a new magic link."}
+                {displayError === "no_user" && "Unable to create session. Please try again."}
+                {!["auth_failed", "no_code", "no_user"].includes(displayError) && `Error: ${displayError}`}
+              </div>
+            )}
+            {displaySent && (
+              <div className="mb-4 p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded">
+                Magic link sent! Check your email and click the link to sign in.
+              </div>
+            )}
+            <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
                   <Input
-                    name="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     type="email"
                     placeholder="your@email.com"
                     className="w-full"
                     required
                     autoFocus
+                    disabled={loading}
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                  Send Magic Link
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Sending..." : "Send Magic Link"}
                 </Button>
               </div>
             </form>

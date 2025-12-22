@@ -55,6 +55,31 @@ export default async function AdminPage() {
     }
   });
 
+  // Get all open/in_progress tickets across all agency projects
+  const projectIds = projects?.map((p) => p.id) || [];
+  const { data: openTickets } = await supabase
+    .from("tickets")
+    .select("id, title, status, created_at, project_id, created_by, projects(id, name)")
+    .in("project_id", projectIds)
+    .in("status", ["open", "in_progress"])
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  // Fetch profiles for ticket creators
+  const ticketUserIds = [...new Set((openTickets || []).map((t: any) => t.created_by))];
+  const { data: ticketProfiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", ticketUserIds);
+
+  const profileMap = new Map((ticketProfiles || []).map((p: any) => [p.id, p]));
+
+  // Add profiles to tickets
+  const ticketsWithProfiles = (openTickets || []).map((ticket: any) => ({
+    ...ticket,
+    profiles: profileMap.get(ticket.created_by) || null,
+  }));
+
   return (
     <div>
       <PageHeader title="Admin Dashboard" description="Manage projects and view progress" />
@@ -80,6 +105,65 @@ export default async function AdminPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Open Tickets Section */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Open Tickets</CardTitle>
+          <p className="text-sm text-muted">
+            Recent open and in-progress tickets across all projects
+          </p>
+        </CardHeader>
+        <CardContent>
+          {!ticketsWithProfiles || ticketsWithProfiles.length === 0 ? (
+            <p className="text-muted">No open tickets at this time</p>
+          ) : (
+            <div className="space-y-3">
+              {ticketsWithProfiles.map((ticket: any) => {
+                const project = ticket.projects;
+                const submitter = ticket.profiles;
+                const submitterName =
+                  submitter?.full_name || submitter?.email || "Unknown";
+                const createdDate = new Date(ticket.created_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
+
+                return (
+                  <a
+                    key={ticket.id}
+                    href={`/portal/${ticket.project_id}/tickets/${ticket.id}`}
+                    className="block p-4 border border-border rounded-lg hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold mb-1 truncate">{ticket.title}</h4>
+                        <p className="text-sm text-muted mb-2">
+                          <span className="font-medium">{project?.name || "Unknown Project"}</span>
+                          {" • "}
+                          {submitterName}
+                          {" • "}
+                          {createdDate}
+                        </p>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            ticket.status === "open"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {ticket.status === "open" ? "Open" : "In Progress"}
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

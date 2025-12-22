@@ -35,29 +35,29 @@ export default async function OnboardingPage({ params }: OnboardingPageProps) {
         description="Complete all steps to finish your project setup"
       />
 
-      <div className="space-y-4 max-w-3xl">
+      <div className="space-y-2 max-w-3xl">
         {steps.map((step) => {
           const submission = submissionMap.get(step.number);
           const isComplete = submission?.is_complete || false;
 
           return (
             <Card key={step.number}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+              <CardHeader style={{ padding: "1rem 1.5rem" }}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2.5">
                     {isComplete ? (
-                      <CheckCircle2 className="w-6 h-6 text-primary" />
+                      <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
                     ) : (
-                      <Circle className="w-6 h-6 text-muted" />
+                      <Circle className="w-4 h-4 text-muted flex-shrink-0" />
                     )}
                     <div>
-                      <CardTitle className="text-xl">
+                      <CardTitle className="text-sm font-semibold" style={{ fontSize: "0.875rem" }}>
                         Step {step.number}: {step.title}
                       </CardTitle>
                     </div>
                   </div>
                   <Link href={`/portal/${projectId}/onboarding/${step.slug}`}>
-                    <Button variant={isComplete ? "secondary" : "default"}>
+                    <Button variant={isComplete ? "secondary" : "default"} size="sm">
                       {isComplete ? "Review" : "Start"}
                     </Button>
                   </Link>

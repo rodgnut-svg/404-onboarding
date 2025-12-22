@@ -166,7 +166,7 @@ export default function Step3Page({ params }: Step3PageProps) {
           )}
 
           <div className="border-t pt-6 space-y-4">
-            <h3 className="font-serif text-xl">Additional Information</h3>
+            <h3 className="font-sans font-semibold" style={{ fontSize: "1.5rem" }}>Additional Information</h3>
 
             <div className="space-y-2">
               <Label htmlFor="about">About</Label>
@@ -201,10 +201,10 @@ export default function Step3Page({ params }: Step3PageProps) {
           </div>
 
           <div className="flex gap-4 pt-4">
-            <Button variant="secondary" onClick={handleSave} disabled={saving}>
+            <Button variant="secondary" onClick={handleSave} disabled={saving} className="h-12">
               {saving ? "Saving..." : "Save"}
             </Button>
-            <Button onClick={handleNext} disabled={saving}>
+            <Button onClick={handleNext} disabled={saving} className="h-12">
               Next Step
             </Button>
           </div>

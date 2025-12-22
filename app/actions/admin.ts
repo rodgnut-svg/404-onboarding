@@ -39,13 +39,25 @@ export async function createProject(formData: FormData) {
     attempts++;
   }
 
-  // Create project
+  // Hash the client code
+  const { data: codeHash, error: hashError } = await supabase.rpc("hash_client_code", {
+    code: clientCode,
+  });
+
+  if (hashError || !codeHash) {
+    return { error: "Failed to hash client code" };
+  }
+
+  // Create project with both plaintext code (for backward compatibility) and hash
   const { data: project, error: projectError } = await supabase
     .from("projects")
     .insert({
       name,
       agency_id: agencyId,
       client_code: clientCode,
+      client_code_hash: codeHash,
+      client_code_active: true,
+      client_code_created_at: new Date().toISOString(),
       status: "active",
     })
     .select()
@@ -115,12 +127,25 @@ export async function bootstrapAgency(
 
   // Create a personal admin project for the user
   const clientCode = generateClientCode();
+  
+  // Hash the client code
+  const { data: codeHash, error: hashError } = await supabase.rpc("hash_client_code", {
+    code: clientCode,
+  });
+
+  if (hashError || !codeHash) {
+    return { error: "Failed to hash client code" };
+  }
+
   const { data: project, error: projectError } = await supabase
     .from("projects")
     .insert({
       name: `${agencyName} - Admin Project`,
       agency_id: agency.id,
       client_code: clientCode,
+      client_code_hash: codeHash,
+      client_code_active: true,
+      client_code_created_at: new Date().toISOString(),
       status: "active",
     })
     .select()

@@ -111,6 +111,7 @@ export default function Step1Page({ params }: Step1PageProps) {
               value={formData.business_name}
               onChange={(e) => handleChange("business_name", e.target.value)}
               placeholder="Your business name"
+              className="h-12"
             />
           </div>
 
@@ -151,7 +152,7 @@ export default function Step1Page({ params }: Step1PageProps) {
               id="primary_goal"
               value={formData.primary_goal}
               onChange={(e) => handleChange("primary_goal", e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm"
+              className="flex h-12 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm"
             >
               <option value="">Select a goal</option>
               <option value="leads">Generate Leads</option>
@@ -242,6 +243,7 @@ export default function Step1Page({ params }: Step1PageProps) {
               variant="secondary"
               onClick={handleSave}
               disabled={saving}
+              className="h-12"
             >
               {saving ? "Saving..." : "Save"}
             </Button>
@@ -249,6 +251,7 @@ export default function Step1Page({ params }: Step1PageProps) {
               type="button"
               onClick={handleNext}
               disabled={saving || !formData.business_name || !formData.primary_goal}
+              className="h-12"
             >
               Next Step
             </Button>

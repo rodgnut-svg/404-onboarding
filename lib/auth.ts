@@ -47,3 +47,18 @@ export async function requireAgencyAdmin() {
   return { user, supabase };
 }
 
+/**
+ * Requires that the user is an agency_admin for the specific project.
+ * Redirects to project dashboard if user is not an agency_admin.
+ */
+export async function requireAgencyAdminForProject(projectId: string) {
+  const { user, supabase, member } = await requireProjectMember(projectId);
+
+  // SECURITY: Only agency_admin can perform admin actions
+  if (member.role !== "agency_admin") {
+    redirect(`/portal/${projectId}`);
+  }
+
+  return { user, supabase, member };
+}
+

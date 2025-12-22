@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#F7F7F5",
+        background: "#f9f9f9",
         foreground: "#111111",
         muted: {
           DEFAULT: "#6B6B6B",
@@ -22,7 +22,7 @@ const config: Config = {
           foreground: "#111111",
         },
         primary: {
-          DEFAULT: "#111111",
+          DEFAULT: "#2563eb",
           foreground: "#FFFFFF",
         },
         secondary: {
@@ -39,7 +39,8 @@ const config: Config = {
         serif: ["var(--font-serif)", "ui-serif", "Georgia"],
       },
       boxShadow: {
-        subtle: "0 1px 3px 0 rgba(0, 0, 0, 0.08)",
+        subtle: "0 2px 12px rgba(0, 0, 0, 0.05)",
+        button: "0 2px 8px rgba(37, 99, 235, 0.2)",
       },
     },
   },

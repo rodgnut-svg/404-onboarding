@@ -131,7 +131,7 @@ export default function Step2Page({ params }: Step2PageProps) {
               id="tone"
               value={formData.tone}
               onChange={(e) => handleChange("tone", e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm"
+              className="flex h-12 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm"
             >
               <option value="">Select tone</option>
               <option value="luxury">Luxury</option>
@@ -154,10 +154,10 @@ export default function Step2Page({ params }: Step2PageProps) {
           </div>
 
           <div className="flex gap-4 pt-4">
-            <Button variant="secondary" onClick={handleSave} disabled={saving}>
+            <Button variant="secondary" onClick={handleSave} disabled={saving} className="h-12">
               {saving ? "Saving..." : "Save"}
             </Button>
-            <Button onClick={handleNext} disabled={saving}>
+            <Button onClick={handleNext} disabled={saving} className="h-12">
               Next Step
             </Button>
           </div>

@@ -29,10 +29,10 @@ export default async function CompletePage({ params }: CompletePageProps) {
       />
 
       <Card>
-        <CardContent className="pt-6 space-y-6">
+        <CardContent style={{ paddingTop: "1.5rem" }} className="space-y-6">
           <div>
-            <h2 className="text-2xl font-serif font-semibold mb-4">Next Steps</h2>
-            <ol className="list-decimal list-inside space-y-3 text-muted">
+            <h2 className="font-sans font-semibold mb-4" style={{ fontSize: "1.5rem" }}>Next Steps</h2>
+            <ol className="list-decimal list-inside space-y-3 text-base text-muted">
               <li>Our team will review your submission</li>
               <li>We'll set up your project timeline</li>
               <li>You'll receive updates in this portal</li>
@@ -42,11 +42,11 @@ export default async function CompletePage({ params }: CompletePageProps) {
 
           {milestones && milestones.length > 0 && (
             <div>
-              <h2 className="text-2xl font-serif font-semibold mb-4">Project Timeline</h2>
+              <h2 className="font-sans font-semibold mb-4" style={{ fontSize: "1.5rem" }}>Project Timeline</h2>
               <div className="space-y-2">
                 {milestones.map((milestone) => (
-                  <div key={milestone.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                    <span>{milestone.title}</span>
+                  <div key={milestone.id} className="flex items-center justify-between p-3 border border-border rounded-[12px]">
+                    <span className="text-base">{milestone.title}</span>
                     <span className="text-sm text-muted capitalize">{milestone.status.replace("_", " ")}</span>
                   </div>
                 ))}
@@ -56,10 +56,7 @@ export default async function CompletePage({ params }: CompletePageProps) {
 
           <div className="flex gap-4 pt-4">
             <Link href={`/portal/${projectId}`}>
-              <Button>Go to Dashboard</Button>
-            </Link>
-            <Link href={`/portal/${projectId}/timeline`}>
-              <Button variant="secondary">View Timeline</Button>
+              <Button className="h-12">Go to Dashboard</Button>
             </Link>
           </div>
         </CardContent>

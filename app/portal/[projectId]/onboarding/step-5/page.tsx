@@ -116,7 +116,7 @@ export default function Step5Page({ params }: Step5PageProps) {
               id="comms_preference"
               value={formData.comms_preference}
               onChange={(e) => handleChange("comms_preference", e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm"
+              className="flex h-12 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm"
             >
               <option value="">Select preference</option>
               <option value="portal_only">Portal only</option>
@@ -140,7 +140,7 @@ export default function Step5Page({ params }: Step5PageProps) {
 
           {bookingUrl && (
             <div className="border-t pt-6 space-y-4">
-              <h3 className="font-serif text-xl">Book Your Kickoff Call</h3>
+              <h3 className="font-sans font-semibold" style={{ fontSize: "1.5rem" }}>Book Your Kickoff Call</h3>
               <div className="bg-muted/20 p-4 rounded-lg">
                 <iframe
                   src={bookingUrl}
@@ -154,12 +154,13 @@ export default function Step5Page({ params }: Step5PageProps) {
           )}
 
           <div className="flex gap-4 pt-4">
-            <Button variant="secondary" onClick={handleSave} disabled={saving || submitting}>
+            <Button variant="secondary" onClick={handleSave} disabled={saving || submitting} className="h-12">
               {saving ? "Saving..." : "Save"}
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={submitting || !formData.decision_maker_name || !formData.decision_maker_email || !formData.revision_policy_ack}
+              className="h-12"
             >
               {submitting ? "Submitting..." : "Submit Onboarding"}
             </Button>

@@ -10,6 +10,8 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-weight: 400;
+    font-size: 1rem;
   }
 
   h1,
@@ -18,6 +20,19 @@
   h4,
   h5,
   h6 {
-    @apply font-serif;
+    @apply font-sans;
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
   }
 }

@@ -11,7 +11,7 @@ interface DashboardPageProps {
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { projectId } = await params;
-  const { supabase } = await requireProjectMember(projectId);
+  const { supabase, member } = await requireProjectMember(projectId);
 
   // Get project
   const { data: project } = await supabase
@@ -19,6 +19,19 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     .select("*")
     .eq("id", projectId)
     .single();
+
+  // Determine title and description based on user role
+  const role = member?.role || "client_member";
+  const projectName = project?.name || "Project";
+  const isAgencyAdmin = role === "agency_admin";
+  
+  const title = isAgencyAdmin 
+    ? `${projectName} — Admin Project`
+    : `${projectName} — Client Portal`;
+  
+  const description = isAgencyAdmin
+    ? "Your project overview and next steps"
+    : "Complete onboarding, upload files, and track progress";
 
   // Get onboarding progress
   const { data: submissions } = await supabase
@@ -31,24 +44,14 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   const totalSteps = 5;
   const progress = (completedSteps / totalSteps) * 100;
 
-  // Get next milestone
-  const { data: nextMilestone } = await supabase
-    .from("milestones")
-    .select("*")
-    .eq("project_id", projectId)
-    .neq("status", "approved")
-    .order("sort", { ascending: true })
-    .limit(1)
-    .single();
-
   return (
     <div>
       <PageHeader
-        title={project?.name || "Dashboard"}
-        description="Your project overview and next steps"
+        title={title}
+        description={description}
       />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2">
         {/* Progress Card */}
         <Card>
           <CardHeader>
@@ -56,56 +59,43 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
             <CardDescription>{completedSteps} of {totalSteps} steps complete</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full bg-muted/20 rounded-full h-2 mb-4">
+            <div className="w-full bg-[#e5e7eb] rounded-full h-[6px] mb-4">
               <div
-                className="bg-primary h-2 rounded-full transition-all"
+                className="bg-[#2563eb] h-[6px] rounded-full transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
             <Link href={`/portal/${projectId}/onboarding`}>
-              <Button variant="secondary" className="w-full">
+              <Button variant="default" className="w-full">
                 Continue Onboarding
               </Button>
             </Link>
           </CardContent>
         </Card>
 
-        {/* Next Step Card */}
-        {nextMilestone && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Next Step</CardTitle>
-              <CardDescription>{nextMilestone.title}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted mb-4">
-                Status: <span className="capitalize">{nextMilestone.status.replace("_", " ")}</span>
-              </div>
-              <Link href={`/portal/${projectId}/timeline`}>
-                <Button variant="secondary" className="w-full">
-                  View Timeline
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Quick Actions */}
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             <Link href={`/portal/${projectId}/uploads`}>
-              <Button variant="secondary" className="w-full justify-start">
+              <Button variant="secondary" className="w-full justify-start h-12">
                 Upload Files
               </Button>
             </Link>
-            <Link href={`/portal/${projectId}/approvals`}>
-              <Button variant="secondary" className="w-full justify-start">
-                View Approvals
+            <Link href={`/portal/${projectId}/tickets`}>
+              <Button variant="secondary" className="w-full justify-start h-12">
+                View Tickets
               </Button>
             </Link>
+            {isAgencyAdmin && (
+              <Link href={`/portal/${projectId}/settings`}>
+                <Button variant="secondary" className="w-full justify-start h-12">
+                  Project Settings
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       </div>

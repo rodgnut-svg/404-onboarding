@@ -124,7 +124,7 @@ export default function Step4Page({ params }: Step4PageProps) {
               id="analytics_access_status"
               value={formData.analytics_access_status}
               onChange={(e) => handleChange("analytics_access_status", e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm"
+              className="flex h-12 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm"
             >
               <option value="">Select status</option>
               <option value="we_set_up">We'll set it up</option>
@@ -167,10 +167,10 @@ export default function Step4Page({ params }: Step4PageProps) {
           </div>
 
           <div className="flex gap-4 pt-4">
-            <Button variant="secondary" onClick={handleSave} disabled={saving}>
+            <Button variant="secondary" onClick={handleSave} disabled={saving} className="h-12">
               {saving ? "Saving..." : "Save"}
             </Button>
-            <Button onClick={handleNext} disabled={saving}>
+            <Button onClick={handleNext} disabled={saving} className="h-12">
               Next Step
             </Button>
           </div>
