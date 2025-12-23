@@ -14,22 +14,34 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
   const { projectId } = await params;
   const { user, supabase, member } = await requireProjectMember(projectId);
 
-  // Get submitted tickets (open and in_progress) for current user
+  const isAgencyAdmin = member?.role === "agency_admin";
+
   let submittedTickets: any[] = [];
+  let receivedTickets: any[] = [];
   let pastTickets: any[] = [];
+  let resolvedTickets: any[] = [];
   let ticketsError: string | null = null;
 
   try {
-    const allTickets = await getTickets(projectId, {
-      created_by: user.id,
-    });
-    submittedTickets = allTickets.filter((t: any) => t.status !== "resolved");
+    if (isAgencyAdmin) {
+      // Agency admin: fetch ALL tickets (not filtered by created_by)
+      const openTickets = await getTickets(projectId, { status: "open" });
+      const inProgressTickets = await getTickets(projectId, { status: "in_progress" });
+      receivedTickets = [...openTickets, ...inProgressTickets];
+      resolvedTickets = await getTickets(projectId, { status: "resolved" });
+    } else {
+      // Regular user: fetch only their own tickets
+      const allTickets = await getTickets(projectId, {
+        created_by: user.id,
+      });
+      submittedTickets = allTickets.filter((t: any) => t.status !== "resolved");
 
-    // Get past/resolved tickets for current user
-    pastTickets = await getTickets(projectId, {
-      created_by: user.id,
-      status: "resolved",
-    });
+      // Get past/resolved tickets for current user
+      pastTickets = await getTickets(projectId, {
+        created_by: user.id,
+        status: "resolved",
+      });
+    }
   } catch (error) {
     console.error("[TicketsPage] Error fetching tickets:", error);
     ticketsError = error instanceof Error ? error.message : "Failed to load tickets";
@@ -39,7 +51,7 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
     <div>
       <PageHeader
         title="Tickets"
-        description="Submit tickets for website updates and track their status"
+        description={isAgencyAdmin ? "Review and resolve tickets from clients" : "Submit tickets for website updates and track their status"}
       />
 
       {ticketsError ? (
@@ -56,6 +68,44 @@ export default async function TicketsPage({ params }: TicketsPageProps) {
             </div>
           </CardContent>
         </Card>
+      ) : isAgencyAdmin ? (
+        <div className="space-y-8">
+          {/* Received Tickets */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Received Tickets</CardTitle>
+              <CardDescription>
+                Tickets from clients that are open or in progress
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TicketList
+                tickets={receivedTickets as any}
+                projectId={projectId}
+                layout="grid"
+                emptyMessage="No received tickets at this time"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Resolved Tickets */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Resolved Tickets</CardTitle>
+              <CardDescription>
+                Tickets that have been marked as resolved
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TicketList
+                tickets={resolvedTickets as any}
+                projectId={projectId}
+                layout="grid"
+                emptyMessage="No resolved tickets yet"
+              />
+            </CardContent>
+          </Card>
+        </div>
       ) : (
         <div className="space-y-8">
           {/* Create New Ticket */}

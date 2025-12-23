@@ -12,12 +12,15 @@ export default async function PortalLayout({
   params,
 }: PortalLayoutProps) {
   const { projectId } = await params;
-  await requireProjectMember(projectId);
+  const { member } = await requireProjectMember(projectId);
 
   const navItems = [
     { label: "Dashboard", href: `/portal/[projectId]` },
     { label: "Onboarding", href: `/portal/[projectId]/onboarding` },
-    { label: "Uploads", href: `/portal/[projectId]/uploads` },
+    { 
+      label: member?.role === "agency_admin" ? "Clients" : "Uploads", 
+      href: `/portal/[projectId]/uploads` 
+    },
     { label: "Tickets", href: `/portal/[projectId]/tickets` },
   ];
 

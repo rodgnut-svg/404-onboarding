@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 
 /**
  * Validates a client code before authentication (pre-auth validation).
- * Uses service role to check if code exists and is active.
+ * Uses service role to check if code exists and is active in client_codes table.
  * Stores the code in a cookie for later use after authentication.
  */
 export async function validateClientCodePreAuth(code: string): Promise<{ success: boolean; error?: string }> {
@@ -20,7 +20,6 @@ export async function validateClientCodePreAuth(code: string): Promise<{ success
   const supabase = createServiceRoleClient();
 
   // Hash the code using the database function
-  // Note: hash_client_code is a SQL function, call it via RPC
   const { data: codeHash, error: hashError } = await supabase.rpc("hash_client_code", {
     code: normalizedCode,
   });
@@ -30,39 +29,43 @@ export async function validateClientCodePreAuth(code: string): Promise<{ success
     return { success: false, error: "Failed to validate code" };
   }
 
-  // Check if a project exists with this hash and is active
-  // Also check plaintext code for backward compatibility (projects created before migration)
-  const { data: projectByHash, error: hashCheckError } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("client_code_hash", codeHash)
-    .eq("client_code_active", true)
+  // Check client_codes table first (new system)
+  const { data: clientCode, error: codeCheckError } = await supabase
+    .from("client_codes")
+    .select("project_id")
+    .eq("code_hash", codeHash)
+    .eq("is_active", true)
+    .is("deleted_at", null)
     .maybeSingle();
 
-  // If not found by hash, try plaintext code (backward compatibility)
-  let project = projectByHash;
-  if (!project && !hashCheckError) {
-    const { data: projectByCode, error: codeCheckError } = await supabase
+  // If not found, check old projects table for backward compatibility
+  let projectId: string | null = null;
+  if (!clientCode && !codeCheckError) {
+    const { data: projectByHash } = await supabase
       .from("projects")
       .select("id")
-      .eq("client_code", normalizedCode)
+      .eq("client_code_hash", codeHash)
+      .eq("client_code_active", true)
       .maybeSingle();
-    
-    if (!codeCheckError && projectByCode) {
-      project = projectByCode;
-      // Auto-migrate: set the hash for this project so future lookups work
-      await supabase
+
+    if (!projectByHash) {
+      const { data: projectByCode } = await supabase
         .from("projects")
-        .update({
-          client_code_hash: codeHash,
-          client_code_active: true,
-          client_code_created_at: new Date().toISOString(),
-        })
-        .eq("id", project.id);
+        .select("id")
+        .eq("client_code", normalizedCode)
+        .maybeSingle();
+      
+      if (projectByCode) {
+        projectId = projectByCode.id;
+      }
+    } else {
+      projectId = projectByHash.id;
     }
+  } else if (clientCode) {
+    projectId = clientCode.project_id;
   }
 
-  if (!project) {
+  if (!projectId) {
     return { success: false, error: "Invalid client code" };
   }
 
@@ -79,11 +82,17 @@ export async function validateClientCodePreAuth(code: string): Promise<{ success
 }
 
 /**
- * Regenerates a client code for a project.
+ * Creates a new client code for a project.
  * Only agency_admin can call this.
  * Returns the plaintext code once (must be copied immediately).
  */
-export async function regenerateClientCode(projectId: string): Promise<{ code: string }> {
+export async function createClientCode(
+  projectId: string,
+  label: string,
+  clientName?: string,
+  clientEmail?: string,
+  notes?: string
+): Promise<{ code: string }> {
   const supabase = await createServerSupabase();
   
   // Verify authentication
@@ -109,32 +118,208 @@ export async function regenerateClientCode(projectId: string): Promise<{ code: s
     throw new Error("Permission denied: must be agency_admin");
   }
 
-  // Call RPC function (which also checks permissions, but we do it here for defense-in-depth)
-  console.log("[regenerateClientCode] Calling RPC with projectId:", projectId);
-  console.log("[regenerateClientCode] User ID:", user.id);
-  
-  const { data: code, error } = await supabase.rpc("regenerate_project_client_code", {
+  // Call RPC function
+  const { data: code, error } = await supabase.rpc("create_project_client_code", {
     p_project_id: projectId,
+    p_label: label,
+    p_client_name: clientName || null,
+    p_client_email: clientEmail || null,
+    p_notes: notes || null,
   });
 
-  console.log("[regenerateClientCode] RPC response - code:", code, "error:", error);
-
   if (error) {
-    console.error("[regenerateClientCode] RPC error details:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
-    throw new Error(error.message || "Failed to regenerate client code");
+    console.error("[createClientCode] RPC error:", error);
+    throw new Error(error.message || "Failed to create client code");
   }
 
   if (!code) {
-    console.error("[regenerateClientCode] No code returned from RPC");
     throw new Error("No code returned from server");
   }
 
   return { code };
+}
+
+/**
+ * Gets all client codes for a project.
+ * Only agency_admin can call this.
+ */
+export async function getClientCodes(projectId: string) {
+  const supabase = await createServerSupabase();
+  
+  // Verify authentication
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  // SECURITY: Explicitly verify user is agency_admin for this project
+  const { data: member, error: memberError } = await supabase
+    .from("project_members")
+    .select("role")
+    .eq("project_id", projectId)
+    .eq("user_id", user.id)
+    .eq("role", "agency_admin")
+    .single();
+
+  if (memberError || !member) {
+    throw new Error("Permission denied: must be agency_admin");
+  }
+
+  // Call RPC function
+  const { data: codes, error } = await supabase.rpc("get_project_client_codes", {
+    p_project_id: projectId,
+  });
+
+  if (error) {
+    console.error("[getClientCodes] RPC error:", error);
+    throw new Error(error.message || "Failed to fetch client codes");
+  }
+
+  return { codes: codes || [] };
+}
+
+/**
+ * Updates a client code's details.
+ * Only agency_admin can call this.
+ */
+export async function updateClientCode(
+  codeId: string,
+  label?: string,
+  clientName?: string,
+  clientEmail?: string,
+  notes?: string
+): Promise<{ success: boolean }> {
+  const supabase = await createServerSupabase();
+  
+  // Verify authentication
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  // Call RPC function (it will verify permissions)
+  // Pass empty string to clear a field, or undefined/null to leave unchanged
+  const { error } = await supabase.rpc("update_client_code_details", {
+    p_code_id: codeId,
+    p_label: label !== undefined ? (label || '') : null,
+    p_client_name: clientName !== undefined ? (clientName || '') : null,
+    p_client_email: clientEmail !== undefined ? (clientEmail || '') : null,
+    p_notes: notes !== undefined ? (notes || '') : null,
+  });
+
+  if (error) {
+    console.error("[updateClientCode] RPC error:", error);
+    throw new Error(error.message || "Failed to update client code");
+  }
+
+  return { success: true };
+}
+
+/**
+ * Deletes (soft deletes) a client code.
+ * Only agency_admin can call this.
+ */
+export async function deleteClientCode(codeId: string): Promise<{ success: boolean }> {
+  const supabase = await createServerSupabase();
+  
+  // Verify authentication
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  // Call RPC function (it will verify permissions)
+  const { error } = await supabase.rpc("delete_client_code", {
+    p_code_id: codeId,
+  });
+
+  if (error) {
+    console.error("[deleteClientCode] RPC error:", error);
+    throw new Error(error.message || "Failed to delete client code");
+  }
+
+  return { success: true };
+}
+
+/**
+ * Regenerates a specific client code.
+ * Only agency_admin can call this.
+ * Returns the plaintext code once (must be copied immediately).
+ */
+export async function regenerateClientCode(codeId: string): Promise<{ code: string }> {
+  const supabase = await createServerSupabase();
+  
+  // Verify authentication
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  // Call RPC function (it will verify permissions internally)
+  const { data: code, error } = await supabase.rpc("regenerate_client_code", {
+    p_code_id: codeId,
+  });
+
+  if (error) {
+    console.error("[regenerateClientCode] RPC error:", error);
+    throw new Error(error.message || "Failed to regenerate client code");
+  }
+
+  if (!code) {
+    throw new Error("No code returned from server");
+  }
+
+  return { code };
+}
+
+/**
+ * Toggles the active status of a client code.
+ * Only agency_admin can call this.
+ */
+export async function toggleClientCodeActive(
+  codeId: string,
+  active: boolean
+): Promise<{ success: boolean }> {
+  const supabase = await createServerSupabase();
+  
+  // Verify authentication
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  // Call RPC function (it will verify permissions)
+  const { error } = await supabase.rpc("toggle_client_code_status", {
+    p_code_id: codeId,
+    p_is_active: active,
+  });
+
+  if (error) {
+    console.error("[toggleClientCodeActive] RPC error:", error);
+    throw new Error(error.message || "Failed to update client code status");
+  }
+
+  return { success: true };
 }
 
 /**
@@ -200,16 +385,17 @@ export async function acceptClientCode(code: string): Promise<{ projectId: strin
 }
 
 /**
- * Toggles client code active status for a project.
- * Only agency_admin can call this.
+ * @deprecated Use toggleClientCodeActive(codeId, active) instead
+ * Kept for backward compatibility
  */
 export async function toggleClientCodeStatus(
   projectId: string,
   active: boolean
 ): Promise<{ success: boolean }> {
+  // This function is deprecated but kept for backward compatibility
+  // It's not used in the new multi-code system
   const supabase = await createServerSupabase();
   
-  // Verify authentication
   const {
     data: { user },
     error: authError,
@@ -219,7 +405,6 @@ export async function toggleClientCodeStatus(
     throw new Error("Not authenticated");
   }
 
-  // Verify user is agency_admin
   const { data: member, error: memberError } = await supabase
     .from("project_members")
     .select("role")
@@ -232,14 +417,12 @@ export async function toggleClientCodeStatus(
     throw new Error("Permission denied: must be agency_admin");
   }
 
-  // Update client_code_active
   const { error: updateError } = await supabase
     .from("projects")
     .update({ client_code_active: active })
     .eq("id", projectId);
 
   if (updateError) {
-    console.error("[toggleClientCodeStatus] Update error:", updateError);
     throw new Error("Failed to update client code status");
   }
 

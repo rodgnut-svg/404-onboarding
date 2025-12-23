@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +15,7 @@ interface CreateTicketFormProps {
 }
 
 export function CreateTicketForm({ projectId, onSuccess }: CreateTicketFormProps) {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,6 +39,7 @@ export function CreateTicketForm({ projectId, onSuccess }: CreateTicketFormProps
         setTitle("");
         setDescription("");
         setLoading(false);
+        router.refresh(); // Trigger server component refresh to show new ticket
         // Reset success message after 3 seconds
         setTimeout(() => setSuccess(false), 3000);
         onSuccess?.();

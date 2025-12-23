@@ -29,10 +29,10 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   // This check happens BEFORE any data is fetched
   const { supabase } = await requireAgencyAdminForProject(projectId);
 
-  // Get project details including client code status
+  // Get project details
   const { data: project } = await supabase
     .from("projects")
-    .select("id, name, client_code_hash, client_code_active, client_code_created_at, client_code_last_rotated_at")
+    .select("id, name")
     .eq("id", projectId)
     .single();
 
@@ -40,8 +40,14 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
     redirect("/portal");
   }
 
-  const hasClientCode = !!project.client_code_hash;
-  const isActive = project.client_code_active ?? true;
+  // Get all client codes for this project using RPC
+  const { data: clientCodes, error: codesError } = await supabase.rpc("get_project_client_codes", {
+    p_project_id: projectId,
+  });
+
+  if (codesError) {
+    console.error("[SettingsPage] Error fetching client codes:", codesError);
+  }
 
   return (
     <div>
@@ -50,13 +56,10 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         description="Manage project settings and client codes"
       />
 
-      <div className="max-w-2xl">
+      <div className="max-w-6xl">
         <ClientCodeSettings
           projectId={projectId}
-          hasClientCode={hasClientCode}
-          isActive={isActive}
-          createdAt={project.client_code_created_at}
-          lastRotatedAt={project.client_code_last_rotated_at}
+          clientCodes={clientCodes || []}
         />
       </div>
     </div>
