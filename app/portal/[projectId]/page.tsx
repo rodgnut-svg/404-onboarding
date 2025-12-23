@@ -110,13 +110,20 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
             <CardTitle>Onboarding Progress</CardTitle>
             <CardDescription>{completedSteps} of {totalSteps} steps complete</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="w-full bg-[#e5e7eb] rounded-full h-[6px]">
               <div
                 className="bg-[#2563eb] h-[6px] rounded-full transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
+            {!isAgencyAdmin && (
+              <Link href={`/portal/${projectId}/onboarding`}>
+                <Button className="w-full">
+                  Continue Onboarding
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
 
