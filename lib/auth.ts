@@ -1,5 +1,6 @@
 import { createClientSupabase } from "./supabase/server";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export async function requireUser() {
   const supabase = await createClientSupabase();
@@ -16,6 +17,15 @@ export async function requireUser() {
 
 export async function requireProjectMember(projectId: string) {
   const { user, supabase } = await requireUser();
+
+  // Check for active project restriction
+  const cookieStore = await cookies();
+  const activeProjectId = cookieStore.get("active_project_id")?.value;
+
+  if (activeProjectId && activeProjectId !== projectId) {
+    // User is restricted to a different project - redirect them to their active project
+    redirect(`/portal/${activeProjectId}`);
+  }
 
   const { data: member, error } = await supabase
     .from("project_members")

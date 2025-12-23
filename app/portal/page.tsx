@@ -2,9 +2,32 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createClientSupabase } from "@/lib/supabase/server";
 import { JoinProjectForm } from "@/components/onboarding/join-project-form";
+import { cookies } from "next/headers";
 
 export default async function PortalPage() {
   const { user, supabase } = await requireUser();
+
+  // Check for active project cookie
+  const cookieStore = await cookies();
+  const activeProjectId = cookieStore.get("active_project_id")?.value;
+
+  if (activeProjectId) {
+    // Verify user is still a member of this project
+    const { data: member } = await supabase
+      .from("project_members")
+      .select("project_id")
+      .eq("project_id", activeProjectId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (member) {
+      // User has an active project and is still a member - redirect to it
+      redirect(`/portal/${activeProjectId}`);
+    } else {
+      // Invalid active project, clear cookie
+      cookieStore.delete("active_project_id");
+    }
+  }
 
   // Get all projects user is a member of
   const { data: members } = await supabase
@@ -33,7 +56,7 @@ export default async function PortalPage() {
     redirect(`/portal/${members[0].project_id}`);
   }
 
-  // Show project selection
+  // Show project selection (legacy case - users without active_project_id cookie)
   return (
       <div className="min-h-screen bg-background">
         <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-24">

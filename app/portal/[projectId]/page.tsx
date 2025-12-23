@@ -4,6 +4,10 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getContracts } from "@/app/actions/contracts";
+import { ContractList } from "@/components/contracts/contract-list";
+import { getWebsiteUrls } from "@/app/actions/website-urls";
+import { WebsitePreview } from "@/components/website/website-preview";
 
 interface DashboardPageProps {
   params: Promise<{ projectId: string }>;
@@ -44,12 +48,60 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   const totalSteps = 5;
   const progress = (completedSteps / totalSteps) * 100;
 
+  // Get contracts for this project - query directly using existing supabase client
+  let contracts: any[] = [];
+  try {
+    const { data: contractsData, error: contractsError } = await supabase
+      .from("files")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("kind", "contract")
+      .order("created_at", { ascending: false });
+    
+    if (contractsError) {
+      console.error("[Dashboard] Error fetching contracts:", contractsError);
+    } else {
+      contracts = contractsData || [];
+      console.log("[Dashboard] Found contracts:", contracts.length);
+    }
+  } catch (error) {
+    console.error("[Dashboard] Exception fetching contracts:", error);
+    // Continue without contracts if there's an error
+  }
+
+  // Get website URLs for this project
+  let websiteUrls: any[] = [];
+  try {
+    const websiteUrlsResult = await getWebsiteUrls(projectId);
+    websiteUrls = websiteUrlsResult.data || [];
+  } catch (error) {
+    console.error("[Dashboard] Exception fetching website URLs:", error);
+    // Continue without website URLs if there's an error
+  }
+
   return (
     <div>
       <PageHeader
         title={title}
         description={description}
       />
+
+      {/* Website Preview Card */}
+      {websiteUrls.length > 0 && (
+        <div className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Live Website Preview</CardTitle>
+              <CardDescription>
+                Preview your website to see live updates
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WebsitePreview urls={websiteUrls} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-8 md:grid-cols-2">
         {/* Progress Card */}
@@ -59,17 +111,12 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
             <CardDescription>{completedSteps} of {totalSteps} steps complete</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full bg-[#e5e7eb] rounded-full h-[6px] mb-4">
+            <div className="w-full bg-[#e5e7eb] rounded-full h-[6px]">
               <div
                 className="bg-[#2563eb] h-[6px] rounded-full transition-all"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <Link href={`/portal/${projectId}/onboarding`}>
-              <Button variant="default" className="w-full">
-                Continue Onboarding
-              </Button>
-            </Link>
           </CardContent>
         </Card>
 
@@ -78,7 +125,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             <Link href={`/portal/${projectId}/uploads`}>
               <Button variant="secondary" className="w-full justify-start h-12">
                 Upload Files
@@ -96,6 +143,21 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 </Button>
               </Link>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Contracts Card */}
+      <div className="mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Contracts</CardTitle>
+            <CardDescription>
+              View and download your project contracts
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ContractList contracts={contracts} projectId={projectId} />
           </CardContent>
         </Card>
       </div>

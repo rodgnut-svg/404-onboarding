@@ -86,10 +86,23 @@ export async function getFiles(projectId: string) {
     throw new Error("Not authenticated on server (auth cookie missing)");
   }
 
+  // SECURITY: Verify user is a member of this project before fetching files
+  const { data: membership, error: membershipError } = await supabase
+    .from("project_members")
+    .select("project_id")
+    .eq("project_id", projectId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (membershipError || !membership) {
+    throw new Error("Access denied: You are not a member of this project");
+  }
+
+  // Now fetch files - RLS will also enforce, but we've added an explicit check
   const { data, error } = await supabase
     .from("files")
     .select("*")
-    .eq("project_id", projectId)
+    .eq("project_id", projectId)  // Explicit filter by project_id
     .order("created_at", { ascending: false });
 
   if (error) {

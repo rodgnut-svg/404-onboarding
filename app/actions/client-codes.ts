@@ -82,61 +82,30 @@ export async function validateClientCodePreAuth(code: string): Promise<{ success
 }
 
 /**
- * Creates a new client code for a project.
+ * Creates a new project with a client code.
  * Only agency_admin can call this.
- * Returns the plaintext code once (must be copied immediately).
+ * Returns the plaintext code once (must be copied immediately) and the projectId.
  */
 export async function createClientCode(
-  projectId: string,
   label: string,
   clientName?: string,
   clientEmail?: string,
   notes?: string
-): Promise<{ code: string }> {
-  const supabase = await createServerSupabase();
+): Promise<{ code: string; projectId: string }> {
+  const { createProjectWithClientCode } = await import("./admin");
   
-  // Verify authentication
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  const result = await createProjectWithClientCode(
+    label,
+    clientName,
+    clientEmail,
+    notes
+  );
 
-  if (authError || !user) {
-    throw new Error("Not authenticated");
+  if ("error" in result) {
+    throw new Error(result.error);
   }
 
-  // SECURITY: Explicitly verify user is agency_admin for this project
-  const { data: member, error: memberError } = await supabase
-    .from("project_members")
-    .select("role")
-    .eq("project_id", projectId)
-    .eq("user_id", user.id)
-    .eq("role", "agency_admin")
-    .single();
-
-  if (memberError || !member) {
-    throw new Error("Permission denied: must be agency_admin");
-  }
-
-  // Call RPC function
-  const { data: code, error } = await supabase.rpc("create_project_client_code", {
-    p_project_id: projectId,
-    p_label: label,
-    p_client_name: clientName || null,
-    p_client_email: clientEmail || null,
-    p_notes: notes || null,
-  });
-
-  if (error) {
-    console.error("[createClientCode] RPC error:", error);
-    throw new Error(error.message || "Failed to create client code");
-  }
-
-  if (!code) {
-    throw new Error("No code returned from server");
-  }
-
-  return { code };
+  return result;
 }
 
 /**
@@ -380,7 +349,17 @@ export async function acceptClientCode(code: string): Promise<{ projectId: strin
     throw new Error("Failed to join project. The code may be invalid or expired.");
   }
 
+  // Set active project cookie to restrict user to this project
+  const cookieStore = await cookies();
+  cookieStore.set("active_project_id", projectId.toString(), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+  });
+
   console.log("[acceptClientCode] Success! Joined project:", projectId);
+  console.log("[acceptClientCode] Set active_project_id cookie to:", projectId.toString());
   return { projectId: projectId.toString() };
 }
 

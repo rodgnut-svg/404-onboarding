@@ -83,6 +83,18 @@ export async function GET(request: Request) {
         // Auto-join project using the stored client code
         const { projectId } = await acceptClientCode(pendingClientCode);
         
+        // Set active project cookie to restrict user to this project
+        cookieStore.set("active_project_id", projectId, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 30, // 30 days
+        });
+        
+        // Log the redirect for debugging
+        console.log("[auth/callback] Redirecting to project:", projectId);
+        console.log("[auth/callback] Set active_project_id cookie to:", projectId);
+        
         // Clear the cookie
         cookieStore.delete("pending_client_code");
         

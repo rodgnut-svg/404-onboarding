@@ -62,8 +62,8 @@ export function LogoutButton() {
   }, []);
 
   const handleLogout = async () => {
-    const supabase = createBrowserSupabaseClient();
-    await supabase.auth.signOut();
+    // Call logout API route to clear cookies server-side
+    await fetch("/api/logout", { method: "POST" });
     router.push("/login");
     router.refresh();
   };

@@ -16,7 +16,8 @@ export default async function PortalLayout({
 
   const navItems = [
     { label: "Dashboard", href: `/portal/[projectId]` },
-    { label: "Onboarding", href: `/portal/[projectId]/onboarding` },
+    // Only show Onboarding for non-admin users (clients)
+    ...(member?.role !== "agency_admin" ? [{ label: "Onboarding", href: `/portal/[projectId]/onboarding` }] : []),
     { 
       label: member?.role === "agency_admin" ? "Clients" : "Uploads", 
       href: `/portal/[projectId]/uploads` 

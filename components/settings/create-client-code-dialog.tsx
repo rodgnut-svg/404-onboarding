@@ -16,14 +16,12 @@ import { createClientCode } from "@/app/actions/client-codes";
 import { Copy, Check } from "lucide-react";
 
 interface CreateClientCodeDialogProps {
-  projectId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
 export function CreateClientCodeDialog({
-  projectId,
   open,
   onOpenChange,
   onSuccess,
@@ -50,7 +48,6 @@ export function CreateClientCodeDialog({
     setLoading(true);
     try {
       const result = await createClientCode(
-        projectId,
         label.trim(),
         clientName.trim() || undefined,
         clientEmail.trim() || undefined,
@@ -104,7 +101,7 @@ export function CreateClientCodeDialog({
             <DialogHeader>
               <DialogTitle>Create Client Code</DialogTitle>
               <DialogDescription>
-                Generate a new client code for this project. You'll be able to view the code once after creation.
+                Generate a new client code and create a new project. You'll be able to view the code once after creation.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -219,7 +216,7 @@ export function CreateClientCodeDialog({
                 </div>
               </div>
               <p className="text-sm text-muted text-center">
-                Share this code with clients who need access to this project.
+                Share this code with clients who need access to the new project.
               </p>
             </div>
           </>
