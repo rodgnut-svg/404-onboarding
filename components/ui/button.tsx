@@ -4,22 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-white rounded-lg hover:bg-[#1d4ed8] hover:shadow-[0_2px_8px_rgba(37,99,235,0.2)]",
+        default: "bg-primary text-white rounded-[12px] hover:bg-[#2563eb] hover:shadow-button active:scale-[0.98]",
         secondary:
-          "border border-border bg-white text-foreground rounded-lg hover:bg-accent/10",
-        outline: "border border-border bg-background rounded-lg hover:bg-accent/10",
-        ghost: "rounded-lg hover:bg-accent/10",
+          "border border-border bg-secondary text-foreground rounded-[12px] hover:bg-[#f5f5f5] hover:border-[rgba(0,0,0,0.1)] active:scale-[0.98]",
+        outline: "border border-border bg-background text-foreground rounded-[12px] hover:bg-secondary hover:border-[rgba(0,0,0,0.1)] active:scale-[0.98]",
+        ghost: "rounded-[12px] hover:bg-secondary active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-12 px-6 py-3",
-        sm: "h-9 px-4 text-xs",
-        lg: "h-12 px-8 text-base",
-        icon: "h-10 w-10",
+        sm: "h-9 px-4 text-xs rounded-[10px]",
+        lg: "h-12 px-8 text-base rounded-[14px]",
+        icon: "h-10 w-10 rounded-[10px]",
       },
     },
     defaultVariants: {

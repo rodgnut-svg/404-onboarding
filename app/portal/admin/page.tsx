@@ -84,7 +84,7 @@ export default async function AdminPage() {
     <div>
       <PageHeader title="Admin Dashboard" description="Manage projects and view progress" />
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-2">
         {/* Create Project */}
         <Card>
           <CardHeader>
@@ -107,16 +107,16 @@ export default async function AdminPage() {
       </div>
 
       {/* Open Tickets Section */}
-      <Card className="mt-6">
+      <Card className="mt-8">
         <CardHeader>
           <CardTitle>Open Tickets</CardTitle>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             Recent open and in-progress tickets across all projects
           </p>
         </CardHeader>
         <CardContent>
           {!ticketsWithProfiles || ticketsWithProfiles.length === 0 ? (
-            <p className="text-muted">No open tickets at this time</p>
+            <p className="text-muted-foreground text-base py-4">No open tickets at this time</p>
           ) : (
             <div className="space-y-3">
               {ticketsWithProfiles.map((ticket: any) => {
@@ -134,23 +134,23 @@ export default async function AdminPage() {
                   <a
                     key={ticket.id}
                     href={`/portal/${ticket.project_id}/tickets/${ticket.id}`}
-                    className="block p-4 border border-border rounded-lg hover:shadow-md transition-shadow"
+                    className="block p-5 border border-border rounded-[12px] hover:shadow-card hover:border-[rgba(0,0,0,0.08)] transition-all duration-200 group"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold mb-1 truncate">{ticket.title}</h4>
-                        <p className="text-sm text-muted mb-2">
-                          <span className="font-medium">{project?.name || "Unknown Project"}</span>
+                        <h4 className="font-semibold mb-2 truncate group-hover:text-primary transition-colors">{ticket.title}</h4>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          <span className="font-medium text-foreground">{project?.name || "Unknown Project"}</span>
                           {" • "}
                           {submitterName}
                           {" • "}
                           {createdDate}
                         </p>
                         <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                             ticket.status === "open"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-yellow-100 text-yellow-800"
+                              ? "bg-primary/10 text-primary"
+                              : "bg-accent/10 text-accent"
                           }`}
                         >
                           {ticket.status === "open" ? "Open" : "In Progress"}

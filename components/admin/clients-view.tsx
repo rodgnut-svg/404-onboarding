@@ -15,11 +15,11 @@ export function ClientsView({ clients }: ClientsViewProps) {
       />
 
       {clients.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted">No clients found</p>
+        <div className="text-center py-16">
+          <p className="text-muted-foreground text-base">No clients found</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {clients.map((client) => (
             <ClientTile key={`${client.client_id}-${client.project_id}`} client={client} />
           ))}

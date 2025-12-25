@@ -40,8 +40,8 @@ export default async function PortalPage() {
       <div className="min-h-screen bg-background">
         <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-24">
           <div className="max-w-2xl">
-          <h1 className="font-sans font-semibold mb-4" style={{ fontSize: "2.5rem" }}>No Projects</h1>
-          <p className="text-base text-muted mb-8" style={{ fontSize: "1rem" }}>
+          <h1 className="font-sans font-bold mb-4 tracking-tight" style={{ fontSize: "2.5rem", lineHeight: "1.1", letterSpacing: "-0.03em" }}>No Projects</h1>
+          <p className="text-base text-muted-foreground mb-8 leading-relaxed" style={{ fontSize: "1rem", lineHeight: "1.6" }}>
             You don't have access to any projects yet. Enter a client code to join a project.
           </p>
           <JoinProjectForm />
@@ -60,20 +60,20 @@ export default async function PortalPage() {
   return (
       <div className="min-h-screen bg-background">
         <div className="max-w-[1200px] mx-auto px-4 md:px-6 py-24">
-          <h1 className="font-sans font-semibold mb-12" style={{ fontSize: "2.5rem" }}>Select a Project</h1>
-          <div className="grid gap-4 md:grid-cols-2">
+          <h1 className="font-sans font-bold mb-12 tracking-tight" style={{ fontSize: "2.5rem", lineHeight: "1.1", letterSpacing: "-0.03em" }}>Select a Project</h1>
+          <div className="grid gap-6 md:grid-cols-2">
             {members.map((member: any) => {
               const project = member.projects;
               return (
                 <a
                   key={member.project_id}
                   href={`/portal/${member.project_id}`}
-                  className="block p-6 border border-border rounded-[12px] bg-card hover:shadow-subtle transition-shadow"
+                  className="block p-6 border border-border rounded-[16px] bg-card hover:shadow-card hover:border-[rgba(0,0,0,0.08)] transition-all duration-200"
                 >
-                  <h2 className="font-sans font-semibold mb-2" style={{ fontSize: "1.5rem" }}>
+                  <h2 className="font-sans font-semibold mb-2 text-foreground" style={{ fontSize: "1.5rem" }}>
                     {project?.name || "Unnamed Project"}
                   </h2>
-                  <p className="text-base text-muted">Status: {project?.status}</p>
+                  <p className="text-base text-muted-foreground">Status: {project?.status}</p>
                 </a>
               );
             })}

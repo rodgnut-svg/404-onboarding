@@ -10,27 +10,27 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#f9f9f9",
-        foreground: "#111111",
+        background: "#FFFFFF",
+        foreground: "#1a1a1a",
         muted: {
-          DEFAULT: "#6B6B6B",
-          foreground: "#6B6B6B",
+          DEFAULT: "#737373",
+          foreground: "#737373",
         },
-        border: "rgba(17,17,17,0.08)",
+        border: "rgba(0, 0, 0, 0.06)",
         card: {
           DEFAULT: "#FFFFFF",
-          foreground: "#111111",
+          foreground: "#1a1a1a",
         },
         primary: {
-          DEFAULT: "#2563eb",
+          DEFAULT: "#3b82f6",
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "transparent",
-          foreground: "#111111",
+          DEFAULT: "#FAFAFA",
+          foreground: "#1a1a1a",
         },
         accent: {
-          DEFAULT: "#0EA5E9",
+          DEFAULT: "#06b6d4",
           foreground: "#FFFFFF",
         },
       },
@@ -39,8 +39,13 @@ const config: Config = {
         serif: ["var(--font-serif)", "ui-serif", "Georgia"],
       },
       boxShadow: {
-        subtle: "0 2px 12px rgba(0, 0, 0, 0.05)",
-        button: "0 2px 8px rgba(37, 99, 235, 0.2)",
+        subtle: "0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03)",
+        button: "0 2px 8px rgba(59, 130, 246, 0.2)",
+        card: "0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03)",
+      },
+      borderRadius: {
+        card: "16px",
+        button: "12px",
       },
     },
   },

@@ -27,9 +27,9 @@ export function TopBar({ navItems = [], projectId }: TopBarProps) {
     : navItems;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#e5e7eb] bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-white/80 backdrop-blur-sm">
       <div className="max-w-[1200px] mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        <Link href="/portal" className="text-xl font-sans font-semibold text-foreground">
+        <Link href="/portal" className="text-xl font-sans font-bold text-foreground tracking-tight">
           404 FOUND
         </Link>
         <div className="flex items-center gap-6">
@@ -43,8 +43,8 @@ export function TopBar({ navItems = [], projectId }: TopBarProps) {
                       variant="ghost"
                       size="sm"
                       className={cn(
-                        "h-9",
-                        isActive && "font-semibold underline"
+                        "h-9 rounded-[10px]",
+                        isActive && "font-semibold bg-secondary"
                       )}
                     >
                       {item.label}

@@ -103,23 +103,23 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
         </div>
       )}
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-10 md:grid-cols-2">
         {/* Progress Card */}
         <Card>
           <CardHeader>
             <CardTitle>Onboarding Progress</CardTitle>
             <CardDescription>{completedSteps} of {totalSteps} steps complete</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="w-full bg-[#e5e7eb] rounded-full h-[6px]">
+          <CardContent>
+            <div className="w-full bg-[#f0f0f0] rounded-full h-[8px] mb-6">
               <div
-                className="bg-[#2563eb] h-[6px] rounded-full transition-all"
+                className="bg-primary h-[8px] rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
             {!isAgencyAdmin && (
               <Link href={`/portal/${projectId}/onboarding`}>
-                <Button className="w-full">
+                <Button variant="secondary" className="w-full justify-start h-12">
                   Continue Onboarding
                 </Button>
               </Link>
