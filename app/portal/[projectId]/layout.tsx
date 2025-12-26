@@ -26,9 +26,9 @@ export default async function PortalLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50">
       <TopBar navItems={navItems} projectId={projectId} />
-      <main className="max-w-[1200px] mx-auto px-4 md:px-6 py-8 md:py-12">{children}</main>
+      <main className="max-w-6xl mx-auto px-6 py-6 md:py-8">{children}</main>
     </div>
   );
 }

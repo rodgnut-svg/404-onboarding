@@ -27,28 +27,28 @@ export function TopBar({ navItems = [], projectId }: TopBarProps) {
     : navItems;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-white/80 backdrop-blur-sm">
-      <div className="max-w-[1200px] mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        <Link href="/portal" className="text-xl font-sans font-bold text-foreground tracking-tight">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur">
+      <div className="max-w-6xl mx-auto flex h-16 items-center justify-between px-6">
+        <Link href="/portal" className="text-xl font-sans font-bold text-slate-900 tracking-tight">
           404 FOUND
         </Link>
         <div className="flex items-center gap-6">
           {fullNavItems.length > 0 && (
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-2">
               {fullNavItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link key={item.href} href={item.href}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <span
                       className={cn(
-                        "h-9 rounded-[10px]",
-                        isActive && "font-semibold bg-secondary"
+                        "px-4 py-2 rounded-full text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-slate-100 text-slate-900"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                       )}
                     >
                       {item.label}
-                    </Button>
+                    </span>
                   </Link>
                 );
               })}

@@ -83,11 +83,10 @@ export function WebsitePreview({ urls }: WebsitePreviewProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+            <div className="relative w-full overflow-hidden rounded-lg border border-slate-200/60" style={{ paddingBottom: "56.25%" }}>
               <iframe
                 src={selectedUrl.url}
-                className="absolute top-0 left-0 w-full h-full border border-border rounded-lg"
-                style={{ minHeight: "400px" }}
+                className="absolute top-0 left-0 w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />

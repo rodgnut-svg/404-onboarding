@@ -36,49 +36,45 @@ export function ContractList({ contracts, projectId }: ContractListProps) {
 
   if (contracts.length === 0) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground text-sm">
-            No contracts available yet. Your agency will upload contracts here.
-          </p>
-        </CardContent>
-      </Card>
+      <p className="text-sm text-slate-500">
+        No contracts available yet. Your agency will upload contracts here.
+      </p>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {contracts.map((contract) => (
-        <Card key={contract.id}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <CardTitle className="text-base font-semibold">
-                    {contract.file_name}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Uploaded {new Date(contract.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                    {contract.size && ` • ${(contract.size / 1024).toFixed(1)} KB`}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDownload(contract.id, contract.file_name)}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
+        <div
+          key={contract.id}
+          className="rounded-xl border border-slate-200/70 bg-white/70 hover:bg-white transition flex items-center justify-between gap-3 px-4 py-3"
+        >
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <FileText className="w-5 h-5 text-slate-500 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-slate-900 truncate">
+                {contract.file_name}
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {new Date(contract.created_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+                {contract.size && ` • ${(contract.size / 1024).toFixed(1)} KB`}
+              </p>
             </div>
-          </CardHeader>
-        </Card>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDownload(contract.id, contract.file_name)}
+            className="flex-shrink-0"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download
+          </Button>
+        </div>
       ))}
     </div>
   );
