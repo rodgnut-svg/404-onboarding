@@ -5,6 +5,20 @@ import { createClientSupabase } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+// Admin email whitelist - only these two emails can be admins
+const ADMIN_EMAILS = [
+  "rodgnut@gmail.com",
+  "davidmortleman@gmail.com",
+];
+
+/**
+ * Check if an email is in the admin whitelist
+ */
+function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 export async function validateClientCode(formData: FormData) {
   const clientCode = formData.get("clientCode") as string;
 
@@ -67,6 +81,11 @@ export async function attachMemberAfterAuth(userId: string) {
 
   const supabase = createServiceRoleClient();
 
+  // Get user's email to check if they're an admin
+  const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+  const userEmail = user?.email;
+  const isAdmin = isAdminEmail(userEmail);
+
   // Check if user is already a member
   const { data: existingMember } = await supabase
     .from("project_members")
@@ -76,19 +95,33 @@ export async function attachMemberAfterAuth(userId: string) {
     .single();
 
   if (existingMember) {
+    // If user is admin and their role is not agency_admin, update it
+    if (isAdmin && existingMember.role !== "agency_admin") {
+      await supabase
+        .from("project_members")
+        .update({ role: "agency_admin" })
+        .eq("project_id", pendingProjectId)
+        .eq("user_id", userId);
+    }
     cookieStore.delete("pending_project");
     return;
   }
 
-  // Check if there's already a client_admin
-  const { data: existingAdmin } = await supabase
-    .from("project_members")
-    .select("*")
-    .eq("project_id", pendingProjectId)
-    .eq("role", "client_admin")
-    .single();
+  // Determine role: admins get agency_admin, others get client_admin/client_member
+  let role: string;
+  if (isAdmin) {
+    role = "agency_admin";
+  } else {
+    // Check if there's already a client_admin
+    const { data: existingAdmin } = await supabase
+      .from("project_members")
+      .select("*")
+      .eq("project_id", pendingProjectId)
+      .eq("role", "client_admin")
+      .single();
 
-  const role = existingAdmin ? "client_member" : "client_admin";
+    role = existingAdmin ? "client_member" : "client_admin";
+  }
 
   // Create membership
   await supabase.from("project_members").insert({

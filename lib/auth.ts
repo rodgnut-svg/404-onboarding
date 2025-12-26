@@ -2,6 +2,20 @@ import { createClientSupabase } from "./supabase/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
+// Admin email whitelist - only these two emails can be admins
+const ADMIN_EMAILS = [
+  "rodgnut@gmail.com",
+  "davidmortleman@gmail.com",
+];
+
+/**
+ * Check if an email is in the admin whitelist
+ */
+function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 export async function requireUser() {
   const supabase = await createClientSupabase();
   const {
@@ -44,6 +58,12 @@ export async function requireProjectMember(projectId: string) {
 export async function requireAgencyAdmin() {
   const { user, supabase } = await requireUser();
 
+  // First check: user must be in admin email whitelist
+  if (!isAdminEmail(user.email)) {
+    redirect("/portal");
+  }
+
+  // Second check: user must have agency_admin role in at least one project
   const { data: members } = await supabase
     .from("project_members")
     .select("role")
@@ -65,7 +85,8 @@ export async function requireAgencyAdminForProject(projectId: string) {
   const { user, supabase, member } = await requireProjectMember(projectId);
 
   // SECURITY: Only agency_admin can perform admin actions
-  if (member.role !== "agency_admin") {
+  // Also verify they're in the admin email whitelist
+  if (member.role !== "agency_admin" || !isAdminEmail(user.email)) {
     redirect(`/portal/${projectId}`);
   }
 

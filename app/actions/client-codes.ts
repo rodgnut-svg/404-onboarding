@@ -4,6 +4,20 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
+// Admin email whitelist - only these two emails can be admins
+const ADMIN_EMAILS = [
+  "rodgnut@gmail.com",
+  "davidmortleman@gmail.com",
+];
+
+/**
+ * Check if an email is in the admin whitelist
+ */
+function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 /**
  * Validates a client code before authentication (pre-auth validation).
  * Uses service role to check if code exists and is active in client_codes table.
@@ -313,6 +327,10 @@ export async function acceptClientCode(code: string): Promise<{ projectId: strin
     throw new Error("Not authenticated. Please sign in first.");
   }
 
+  // Check if user is an admin
+  const userEmail = user.email;
+  const isAdmin = isAdminEmail(userEmail);
+
   // Normalize code (trim and uppercase)
   const normalizedCode = code.trim().toUpperCase();
   console.log("[acceptClientCode] Normalized code:", normalizedCode);
@@ -347,6 +365,38 @@ export async function acceptClientCode(code: string): Promise<{ projectId: strin
   if (!projectId) {
     console.error("[acceptClientCode] No projectId returned from RPC");
     throw new Error("Failed to join project. The code may be invalid or expired.");
+  }
+
+  // If user is an admin, update their role to agency_admin
+  if (isAdmin) {
+    const serviceSupabase = createServiceRoleClient();
+    
+    // Check current role
+    const { data: member } = await serviceSupabase
+      .from("project_members")
+      .select("role")
+      .eq("project_id", projectId)
+      .eq("user_id", user.id)
+      .single();
+
+    // Update to agency_admin if not already
+    if (member && member.role !== "agency_admin") {
+      await serviceSupabase
+        .from("project_members")
+        .update({ role: "agency_admin" })
+        .eq("project_id", projectId)
+        .eq("user_id", user.id);
+      
+      console.log("[acceptClientCode] Updated user role to agency_admin for admin:", userEmail);
+    } else if (!member) {
+      // If somehow no member record exists, create one with agency_admin role
+      await serviceSupabase.from("project_members").insert({
+        project_id: projectId,
+        user_id: user.id,
+        role: "agency_admin",
+      });
+      console.log("[acceptClientCode] Created agency_admin membership for admin:", userEmail);
+    }
   }
 
   // Set active project cookie to restrict user to this project

@@ -30,7 +30,9 @@ export default function OnboardingPage() {
         setLoading(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to validate code");
+      console.error("[OnboardingPage] Error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to validate code. Please try again.";
+      setError(errorMessage);
       setLoading(false);
     }
   };
