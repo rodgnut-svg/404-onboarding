@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 export function LogoutButton() {
   const router = useRouter();
@@ -73,10 +74,11 @@ export function LogoutButton() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full"
+          className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100/80 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 transition-colors cursor-pointer group"
           aria-label="User menu"
         >
           <Avatar initial={initial} size="default" variant="default" />
+          <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-slate-700 transition-colors" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

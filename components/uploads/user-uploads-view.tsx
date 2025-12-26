@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -17,8 +16,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getFiles, uploadFile, getSignedDownloadUrl, deleteFile, getCurrentUserRole } from "@/app/actions/files";
-import { debugWhoAmI } from "@/app/actions/auth";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Trash2, File } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface UserUploadsViewProps {
   projectId: string;
@@ -40,16 +39,10 @@ export function UserUploadsView({ projectId }: UserUploadsViewProps) {
   const [userId, setUserId] = useState<string>("");
   const [deleteFileId, setDeleteFileId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<{ userId: string | null; email: string | null; error: string | null } | null>(null);
 
   useEffect(() => {
-    Promise.all([loadFiles(projectId), loadUserRole(projectId), loadDebugInfo()]);
+    Promise.all([loadFiles(projectId), loadUserRole(projectId)]);
   }, [projectId]);
-
-  const loadDebugInfo = async () => {
-    const info = await debugWhoAmI();
-    setDebugInfo(info);
-  };
 
   const loadUserRole = async (pid: string) => {
     const result = await getCurrentUserRole(pid);
@@ -126,48 +119,57 @@ export function UserUploadsView({ projectId }: UserUploadsViewProps) {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="File Uploads"
         description="Upload files for your project"
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload File</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Upload Section - Gradient Panel */}
+      <div className="rounded-2xl border border-slate-200/50 shadow-sm bg-gradient-to-br from-cyan-200/35 via-blue-200/25 to-violet-200/30 p-4 md:p-5">
+        <div className="bg-white/80 backdrop-blur rounded-2xl border border-white/60 shadow-sm p-5 md:p-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Upload File</h2>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="file" className="text-base font-medium">Select File</Label>
-              <Input
-                id="file"
-                type="file"
-                onChange={handleUpload}
-                disabled={uploading}
-                className="h-12"
-              />
+              <div className="rounded-xl border border-slate-200/70 bg-white overflow-hidden h-12 flex items-center px-1">
+                <Input
+                  id="file"
+                  type="file"
+                  onChange={handleUpload}
+                  disabled={uploading}
+                  className="h-full w-full border-0 rounded-xl px-2 py-0 flex items-center file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:hover:bg-blue-700 file:text-white file:px-4 file:py-2 file:text-sm file:font-medium file:cursor-pointer"
+                  style={{ lineHeight: '48px' }}
+                />
+              </div>
             </div>
-            {uploading && <p className="text-sm text-muted">Uploading...</p>}
+            {uploading && <p className="text-sm text-slate-500">Uploading...</p>}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <div className="mt-8">
-        <h2 className="font-sans font-semibold mb-6" style={{ fontSize: "1.5rem" }}>Uploaded Files</h2>
-        {files.length === 0 ? (
-          <p className="text-muted text-base">No files uploaded yet</p>
-        ) : (
-          <div className="space-y-3">
-            {files.map((file) => (
-              <Card key={file.id}>
-                <CardContent style={{ padding: "1rem 1.5rem" }}>
+      {/* Uploaded Files Section */}
+      <div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Uploaded Files</h2>
+        <Card className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5 md:p-6">
+          {files.length === 0 ? (
+            <p className="text-sm text-slate-500">No files uploaded yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {files.map((file) => (
+                <div
+                  key={file.id}
+                  className="rounded-xl border border-slate-200/70 bg-white px-4 py-3 hover:border-slate-300/70 hover:shadow-sm transition"
+                >
                   <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-base mb-0.5 truncate">{file.file_name}</p>
-                      <p className="text-sm text-muted">
-                        {(file.size / 1024 / 1024).toFixed(2)} MB • {new Date(file.created_at).toLocaleDateString()}
-                      </p>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <File className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-semibold text-slate-900 truncate">{file.file_name}</p>
+                        <p className="text-xs text-slate-400">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB • {new Date(file.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
@@ -190,11 +192,11 @@ export function UserUploadsView({ projectId }: UserUploadsViewProps) {
                       )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       </div>
 
       <AlertDialog open={!!deleteFileId} onOpenChange={(open) => !open && setDeleteFileId(null)}>
@@ -216,16 +218,6 @@ export function UserUploadsView({ projectId }: UserUploadsViewProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Debug info at bottom */}
-      {debugInfo && (
-        <div className="mt-8 pt-4 border-t text-xs text-muted-foreground">
-          <p className="font-mono">
-            Server Auth Debug: userId={debugInfo.userId || "null"}, email={debugInfo.email || "null"}
-            {debugInfo.error && `, error=${debugInfo.error}`}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
